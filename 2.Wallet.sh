@@ -4,15 +4,13 @@ CREDENTIAL_ENDPOINT="http://localhost:8080/realms/master"
 ISSUER_CLIENT_ID="issuer_client"
 ISSUER_CLIENT_SECRET="issuer_secret"
 
-PRE_AUTHORIZED_CODE="4a7d4e51-2c24-4038-b585-430fa81d4ada.6091afcc-bd9c-45d3-8e3b-6e65eb67165c.c4c1b7a7-c857-4f1a-9c40-b4d16113b6c5"
+PRE_AUTHORIZED_CODE="3f385cd3-d323-4fc5-bb92-0e92f068b0f3.a734dab8-95ff-411c-99ab-7ab080509504.008381f2-f989-4bd3-a45b-04e07c013d9e"
 
 response=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
-    -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
-    -d "client_id=$ISSUER_CLIENT_ID"\
-    -d "client_secret=$ISSUER_CLIENT_SECRET"
+    -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" 
 )
 
 

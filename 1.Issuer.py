@@ -23,11 +23,38 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
     code = query.get('code', None)
     if code != None:
       access_code = code[0]
+    print("...Requesting token")
+    _token_post_data = {
+    'code': access_code,
+    'client_id': ISSUER_CLIENT_ID,
+    'client_secret':ISSUER_CLIENT_SECRET,
+    'redirect_uri':redirect_uri,
+    'grant_type':'authorization_code'
+    }
+
+    response = requests.post(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/openid-connect/token", data=_token_post_data)
+    #assuming correct response
+    token_response_json =  json.loads(response.text)
+    access_token = token_response_json['access_token']
+
+    print("...Requesting credential offer")
+    headers = {
+        'Authorization': 'Bearer ' + access_token,
+    }
+
+    response = requests.get(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=trace4eu", headers=headers)
+    configuration_json =  json.loads(response.text)
+
+    response = requests.get(configuration_json['issuer']+ "/"+ configuration_json['nonce'], headers=headers)
+    print(response.text)
+    
     self.send_response(200)
     self.send_header("Content-type", "text/html")
     self.end_headers()
     self.wfile.write(bytes("<html><head><title>OAuth client</title></head>", "utf-8"))
     self.wfile.write(bytes("<body>", "utf-8"))
+    self.wfile.write(bytes("<p>Copy the pre-authorized_code from the following credential offer to the 2.Wallet.sh script.</p>", "utf-8"))
+    self.wfile.write(bytes("<code>"+response.text+"</code>", "utf-8"))
     self.wfile.write(bytes("<p>You can now close the browser and return to the application.</p>", "utf-8"))
     self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -49,28 +76,4 @@ if (access_code == ""):
   print("Code was not received. Inspect errors in the output")
   sys.exit()
 
-print("...Requesting token")
-_token_post_data = {
-  'code': access_code,
-  'client_id': ISSUER_CLIENT_ID,
-  'client_secret':ISSUER_CLIENT_SECRET,
-  'redirect_uri':redirect_uri,
-  'grant_type':'authorization_code'
-}
 
-response = requests.post(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/openid-connect/token", data=_token_post_data)
-#assuming correct response
-token_response_json =  json.loads(response.text)
-access_token = token_response_json['access_token']
-
-print("...Requesting credential offer")
-headers = {
-    'Authorization': 'Bearer ' + access_token,
-}
-
-response = requests.get(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=trace4eu", headers=headers)
-configuration_json =  json.loads(response.text)
-
-response = requests.get(configuration_json['issuer']+ "/"+ configuration_json['nonce'], headers=headers)
-print(response.text)
-print("Copy paste the pre-authorization_code to the 2.Wallet.sh script")

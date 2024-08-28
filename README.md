@@ -22,6 +22,6 @@ with user name `trace4eu` and password `trace4eu`.
 
 
 Step 3: Execute the issuer script `python3 ./Issuer.py` This script emulates the web application of an issuer. It opens a browser. There you have to login 
-using the demo user credentials and give consent. Then the console outputs the credential offer.
+using the demo user credentials and give consent. Then you are re-directed to a web page that includes the credential offer (also ouput to the console).
 
 Step 4: Copy the `pre-authorized_code` in the `2.Wallet.sh` script and exeute it to receive the credential. 

@@ -1,10 +1,9 @@
 #!/bin/bash 
 KEYCLOAK_EXTERNAL_ADDR="http://localhost:8080"
-CREDENTIAL_ENDPOINT="http://localhost:8080/realms/master"
-ISSUER_CLIENT_ID="issuer_client"
-ISSUER_CLIENT_SECRET="issuer_secret"
 
-PRE_AUTHORIZED_CODE="3f385cd3-d323-4fc5-bb92-0e92f068b0f3.a734dab8-95ff-411c-99ab-7ab080509504.008381f2-f989-4bd3-a45b-04e07c013d9e"
+
+
+PRE_AUTHORIZED_CODE="4ef04951-c747-4cf7-bef9-f4e0a365979a.e1e662f7-1771-4f23-abad-13ce22893a5a.cc6d3e3e-9c11-42d0-a2b8-2c9d31f37c89"
 
 response=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \

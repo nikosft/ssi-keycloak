@@ -3,11 +3,11 @@ This repository includes scripts of issuing Verfiable Credentials using [keycloa
 
 # Prerequisites
 * docker
-* jq (e.g., `sudo apt-get install jq`)
 
 For the issuer the following python libraries are required
 
 * requests (`python -m pip install requests`)
+* qrcode (`python -m pip install qrcode`)
 
 
 # Using
@@ -15,6 +15,12 @@ Step 1: Keycloak execution. Run the following command. Make sure you are using a
 
 ```bash
 docker run --rm -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin -e KC_FEATURES=oid4vc-vci  quay.io/keycloak/keycloak:nightly start-dev
+```
+
+if you want to run keycloack using a different hostname use this option:
+
+```
+-e KC_HOSTNAME=<your hostname>
 ```
 
 Step 2: Configure Keycloak by executing `./0.configure.sh` This script creates the necessary VC configuration, a client application, as well as a demo user

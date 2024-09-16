@@ -60,10 +60,10 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
             }
         },
         "credential_issuer":"",
-        "credentials":{
+        "credentials":[{
             "format": "jwt_vc",
             "types": ["VerifiableCredential", "trace4eu"]
-        }
+        }]
     }
     keycloak_credential_offer = json.loads(response.text)
     ebsi_credential_offer["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"] = keycloak_credential_offer["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
@@ -74,7 +74,8 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
        box_size=5,
        border=4,
      )
-    qr.add_data("openid-credential-offer://?credential_offer=" + json.dumps(ebsi_credential_offer))
+    credential_offer_string =  "openid-credential-offer://?credential_offer=" + quote_plus(json.dumps(ebsi_credential_offer))
+    qr.add_data(credential_offer_string)
     qr.make(fit=True)
     img = qr.make_image(fill='black', back_color='white')
     buffer = BytesIO()
@@ -89,6 +90,8 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
     self.wfile.write(bytes("<code>"+json.dumps(ebsi_credential_offer)+"</code>", "utf-8"))
     self.wfile.write(bytes("<p>Or scan the following qrcode.</p>", "utf-8"))
     self.wfile.write(bytes(f'<img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />', "utf-8"))
+    self.wfile.write(bytes("<p>QRCode data:</p>", "utf-8"))
+    self.wfile.write(bytes(f'<p>{credential_offer_string}</p>', "utf-8"))
     self.wfile.write(bytes("<p>You can now close the browser and return to the application.</p>", "utf-8"))
     self.wfile.write(bytes("</body></html>", "utf-8"))
 

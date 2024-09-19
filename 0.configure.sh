@@ -1,7 +1,8 @@
 #!/bin/bash 
-KEYCLOAK_EXTERNAL_ADDR="http://localhost:8080"
+KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
 KEYCLOAK_ADMIN_USERNAME="admin"
 KEYCLOAK_ADMIN_PASSWORD="admin"
+
 
 
 response=$(curl -k -s  -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
@@ -26,25 +27,46 @@ response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master \
     -d "$REALM_CONFIGURATION" )
 
 
+# Enable ecdsa  
+COMPONENT='{
+    "config": {
+        "active": ["true"],
+        "ecdsaEllipticCurveKey": ["P-256"],
+        "enabled": ["true"],
+        "priority": ["0"]
+    },
+    "name": "ecdsa-generated",
+    "providerId": "ecdsa-generated",
+    "providerType": "org.keycloak.keys.KeyProvider"
+}'
+
+response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/components \
+    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$COMPONENT")
+
 #Add signing components
 ## Get key Id
 response=$(curl -k -s  -X GET $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys \
     -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" )
 
-KEY_ID=$(echo $response|jq -r '.active.RS256')
-COMPONENT="{
-    \"id\": \"jwt_signing_component_trace4eu\",
-    \"name\": \"jwt_signing_component_trace4eu\",
-    \"providerId\": \"jwt_vc\",
-    \"providerType\": \"org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService\",
-    \"config\": {
-      \"keyId\": [\"$KEY_ID\"],
-      \"algorithmType\": [\"RS256\"],
-      \"hashAlgorithm\": [\"sha-256\"],
-      \"tokenType\": [\"JWT\"],
-      \"vcConfigId\": [\"trace4eu\"]
+
+KEY_ID=$(echo $response|jq -r '.active.ES256')
+
+COMPONENT='{
+    "id": "jwt_signing_component_trace4eu",
+    "name": "jwt_signing_component_trace4eu",
+    "providerId": "jwt_vc",
+    "providerType": "org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService",
+    "config": {
+      "keyId": ["'"${KEY_ID}"'"],
+      "algorithmType": ["ES256"],
+      "hashAlgorithm": ["sha-256"],
+      "tokenType": ["JWT"],
+      "vcConfigId": ["trace4eu"]
     }
-  }"
+  }'
+
 
 response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/components \
     -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
@@ -65,9 +87,8 @@ OID4VCI_CLIENT_CONFIG='{
     "vc.trace4eu.expiry_in_s": 100,
     "vc.trace4eu.format": "jwt_vc",
     "vc.trace4eu.scope": "trace4eu",
-    "vc.trace4eu.credential_signing_alg_values_supported": "RS256",
-    "vc.trace4eu.claims": "{ \"firstName\": {\"mandatory\": false, \"display\": [{\"name\": \"First Name\", \"locale\": \"en-US\"}, {\"name\": \"名前\", \"locale\": \"ja-JP\"}]}, \"lastName\": {\"mandatory\": false}, \"email\": {\"mandatory\": false} }"
-  },
+    "vc.trace4eu.credential_signing_alg_values_supported": "ES256"
+   },
   "protocolMappers": [
     {
       "id": "firstName-mapper-001",

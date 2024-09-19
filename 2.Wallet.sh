@@ -3,7 +3,7 @@ KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
 
 
 
-PRE_AUTHORIZED_CODE="a71edcb0-0430-4121-a550-80c9bcb37ac1.c035fe19-89a1-4dc3-b310-cba11246c7f9.b2c7156e-461e-46b4-9c98-f15a386acdf8"
+PRE_AUTHORIZED_CODE="846f9635-c0c9-43da-944c-e79f72afcba6.1e68f591-aa48-45b3-a230-cc85bed9e8fa.d4196b9c-725d-4ce1-b337-98c1b0af32fa"
 
 response=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \

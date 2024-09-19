@@ -28,10 +28,22 @@ metadata = {
   ]
 }
 
-def response(flow: http.HTTPFlow) -> None:
+def request(flow: http.HTTPFlow) -> None:
     if flow.request.pretty_url.endswith("/.well-known/openid-credential-issuer"):
         flow.response = http.Response.make(
             200,  # (optional) status code
             json.dumps(metadata),  # (optional) content
             {"Content-Type": "application/json"},  # (optional) headers
         )
+    if flow.request.pretty_url.endswith("/realms/master/protocol/oid4vc/credential"):
+        data = json.loads(flow.request.get_text())
+        data.pop('types', None)#Old OIDC version, replace it with credential_identifier
+        data['credential_identifier']="trace4eu"
+        data.pop('proof', None)
+        flow.request.text = json.dumps(data)
+
+def response(flow: http.HTTPFlow) -> None:
+    if flow.request.pretty_url.endswith("/realms/master/protocol/openid-connect/token"):
+        data = json.loads(flow.response.get_text())
+        data["c_nonce"] = "aaaabbbbbbccccc"
+        flow.response.text = json.dumps(data)

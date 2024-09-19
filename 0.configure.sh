@@ -133,7 +133,7 @@ ISSUER_CLIENT_CONFIG='{
     "notBefore": 0,
     "bearerOnly": false,
     "standardFlowEnabled": true,
-    "implicitFlowEnabled": false,
+    "implicitFlowEnabled": true,
     "directAccessGrantsEnabled": true,
     "serviceAccountsEnabled": false,
     "publicClient": false,

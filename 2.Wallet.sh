@@ -1,9 +1,9 @@
 #!/bin/bash 
-KEYCLOAK_EXTERNAL_ADDR="http://localhost:8080"
+KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
 
 
 
-PRE_AUTHORIZED_CODE="4ef04951-c747-4cf7-bef9-f4e0a365979a.e1e662f7-1771-4f23-abad-13ce22893a5a.cc6d3e3e-9c11-42d0-a2b8-2c9d31f37c89"
+PRE_AUTHORIZED_CODE="a71edcb0-0430-4121-a550-80c9bcb37ac1.c035fe19-89a1-4dc3-b310-cba11246c7f9.b2c7156e-461e-46b4-9c98-f15a386acdf8"
 
 response=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \
@@ -12,6 +12,7 @@ response=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-conn
     -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" 
 )
 
+echo $response
 
 CREDENTIAL_ACCESS_TOKEN=$(echo $response | jq -r '.access_token')
 

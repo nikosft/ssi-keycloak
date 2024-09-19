@@ -9,6 +9,9 @@ For the issuer the following python libraries are required
 * requests (`python -m pip install requests`)
 * qrcode (`python -m pip install qrcode`)
 
+For the proxy that provides backward compatibility which OID4VCI used by ebsy (mitmproxy)(https://mitmproxy.org/)
+is required
+
 
 # Using
 Step 1: Keycloak execution. Run the following command. Make sure you are using a safe password
@@ -31,3 +34,9 @@ Step 3: Execute the issuer script `python3 ./Issuer.py` This script emulates the
 using the demo user credentials and give consent. Then you are re-directed to a web page that includes the credential offer (also ouput to the console).
 
 Step 4: Copy the `pre-authorized_code` in the `2.Wallet.sh` script and exeute it to receive the credential. 
+
+## EBSI compliance
+
+```bash
+mitmproxy -s ./ebsi.py --mode reverse:http://localhost:8080@7000
+```

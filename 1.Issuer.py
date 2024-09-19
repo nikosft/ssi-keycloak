@@ -11,7 +11,7 @@ from io import BytesIO
 
 # Begin Configuration
 KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
-ISSUER_URL="https://905c-195-251-234-25.ngrok-free.app" # this script
+ISSUER_URL="https://fb5a-195-251-234-25.ngrok-free.app" # this script
 USER_USERNAME="trace4eu"
 USER_PASSWORD="trace4eu"
 ISSUER_CLIENT_ID="issuer_client"
@@ -29,48 +29,17 @@ ebsi_credential_offer = {
             "user_pin_required":False
         }
     },
-    "credential_issuer":ISSUER_URL,
+    "credential_issuer":KEYCLOAK_EXTERNAL_ADDR,
     "credentials":[{
         "format": "jwt_vc",
         "types": ["VerifiableCredential", "trace4eu"]
     }]
 }
 
-metadata = {
-  "authorization_server": KEYCLOAK_EXTERNAL_ADDR + "/realms/master",
-  "credential_issuer": KEYCLOAK_EXTERNAL_ADDR + "/realms/master",
-  "credential_endpoint": KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/oid4vc/credential",
-  "deferred_credential_endpoint": KEYCLOAK_EXTERNAL_ADDR + "/realms/master",
-  "credentials_supported": [
-    {
-      "format": "jwt_vc",
-      "types": [
-        "VerifiableCredential",
-        "trace4eu"
-      ],
-      
-      "display": [
-        {
-          "name": "Trace4EU credentials",
-          "locale": "en-GB"
-        }
-      ]
-    }
-  ]
-}
+
 
 class AccessCodeHandler(BaseHTTPRequestHandler):
-  def do_GET(self):
-    print(self.path)
-    absolute_path = self.path.split("?")[0]
-    if absolute_path == '/.well-known/openid-credential-issuer':
-        metadata_response = json.dumps(metadata)
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
-        self.wfile.write(bytes(f'{metadata_response}', "utf-8"))
-        return 
-    if absolute_path == '/':
+    def _credential_offer(self):
         global access_code
         query = parse_qs(urlparse (self.path).query)
         code = query.get('code', None)
@@ -87,12 +56,12 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
             'redirect_uri':redirect_uri,
             'grant_type':'authorization_code'
         }
-        print(_token_post_data)
+        
         response = requests.post(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/openid-connect/token", data=_token_post_data)
         #assuming correct response
         token_response_json =  json.loads(response.text)
         access_token = token_response_json['access_token']
-
+        print("Token endpoint: ", response.text)
         print("...Requesting credential offer")
         headers = {
             'Authorization': 'Bearer ' + access_token,
@@ -107,10 +76,10 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
         ebsi_credential_offer["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"] = keycloak_credential_offer["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
         
         qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=5,
-        border=4,
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=5,
+            border=4,
         )
         credential_offer_string =  "openid-credential-offer://?credential_offer=" + quote_plus(json.dumps(ebsi_credential_offer))
         qr.add_data(credential_offer_string)
@@ -122,16 +91,23 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(bytes("<html><head><title>OAuth client</title></head>", "utf-8"))
-        self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>Copy the pre-authorized_code from the following credential offer to the 2.Wallet.sh script.</p>", "utf-8"))
-        self.wfile.write(bytes("<code>"+json.dumps(ebsi_credential_offer)+"</code>", "utf-8"))
-        self.wfile.write(bytes("<p>Or scan the following qrcode.</p>", "utf-8"))
-        self.wfile.write(bytes(f'<img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />', "utf-8"))
-        self.wfile.write(bytes("<p>QRCode data:</p>", "utf-8"))
-        self.wfile.write(bytes(f'<p>{credential_offer_string}</p>', "utf-8"))
-        self.wfile.write(bytes("<p>You can now close the browser and return to the application.</p>", "utf-8"))
-        self.wfile.write(bytes("</body></html>", "utf-8"))
+        credential_offer_html = f"""
+            <html><head><title>OAuth client</title></head>
+            <body>
+            <p>Copy the pre-authorized_code from the following credential offer to the 2.Wallet.sh script.</p>
+            <code>{json.dumps(ebsi_credential_offer)}
+            <p>Or scan the following qrcode.</p>
+            <img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />
+            <p>QRCode data:</p>
+            <p>{credential_offer_string}</p>
+            <p>You can now close the browser and return to the application.</p>
+            </body></html>
+        """
+        self.wfile.write(bytes(credential_offer_html, "utf-8"))
+    def do_GET(self):
+        print(self.path)
+        self._credential_offer()
+        
 
 redirect_uri_urlencoded = quote_plus(redirect_uri )
 _authorization_url = f"""{KEYCLOAK_EXTERNAL_ADDR}/realms/master/protocol/openid-connect/auth?

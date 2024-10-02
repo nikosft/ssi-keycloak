@@ -8,10 +8,12 @@ For the issuer the following python libraries are required
 
 * requests (`python -m pip install requests`)
 * qrcode (`python -m pip install qrcode`)
+* jwcrypto (`python -m pip install jwcrypto`)
+* base58 (`python -m pip install base58`)
+* jcs (`python -m pip install jcs`)
 
 For the proxy that provides backward compatibility which OID4VCI used by ebsy (mitmproxy)(https://mitmproxy.org/)
-is required
-
+is required, which must be installed using a Python Package manager (https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)
 
 # Using
 Step 1: Keycloak execution. Run the following command. Make sure you are using a safe password

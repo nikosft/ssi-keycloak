@@ -10,10 +10,7 @@ from io import BytesIO
 
 
 # Begin Configuration
-KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
-ISSUER_URL="https://fb5a-195-251-234-25.ngrok-free.app" # this script
-USER_USERNAME="trace4eu"
-USER_PASSWORD="trace4eu"
+KEYCLOAK_EXTERNAL_ADDR="https://keycloack.excid.io"
 ISSUER_CLIENT_ID="issuer_client"
 ISSUER_CLIENT_SECRET="issuer_secret"
 # End Configuration
@@ -36,7 +33,13 @@ ebsi_credential_offer = {
     }]
 }
 
-
+redirect_uri_urlencoded = quote_plus(redirect_uri )
+_authorization_url = f"""{KEYCLOAK_EXTERNAL_ADDR}/realms/master/protocol/openid-connect/auth?
+response_type=code&
+client_id={ISSUER_CLIENT_ID}&
+scope=openid&
+redirect_uri={redirect_uri_urlencoded}&
+""".replace("\n", "")
 
 class AccessCodeHandler(BaseHTTPRequestHandler):
     def _credential_offer(self):
@@ -107,7 +110,7 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
                 <img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />
                 <p>QRCode data:</p>
                 <p>{credential_offer_string}</p>
-                <p>You can now close the browser and return to the application.</p>
+                <p><a href="{_authorization_url}">Request new credential offer</a></p>
                 </body></html>
             """
             self.wfile.write(bytes(credential_offer_html, "utf-8"))
@@ -115,14 +118,6 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
         print(self.path)
         self._credential_offer()
         
-
-redirect_uri_urlencoded = quote_plus(redirect_uri )
-_authorization_url = f"""{KEYCLOAK_EXTERNAL_ADDR}/realms/master/protocol/openid-connect/auth?
-response_type=code&
-client_id={ISSUER_CLIENT_ID}&
-scope=openid&
-redirect_uri={redirect_uri_urlencoded}&
-""".replace("\n", "")
 
 print("...Opening browser")
 webbrowser.open(_authorization_url)

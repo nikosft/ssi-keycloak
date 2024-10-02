@@ -1,5 +1,5 @@
 #!/bin/bash 
-KEYCLOAK_EXTERNAL_ADDR="https://reliably-settled-aardvark.ngrok-free.app"
+KEYCLOAK_EXTERNAL_ADDR="https://keycloack.excid.io"
 KEYCLOAK_ADMIN_USERNAME="admin"
 KEYCLOAK_ADMIN_PASSWORD="admin"
 
@@ -12,19 +12,6 @@ response=$(curl -k -s  -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/op
     -d "client_id=admin-cli")
 
 ADMIN_ACCESS_TOKEN=$(echo $response|jq -r '.access_token')
-
-REALM_CONFIGURATION='{
-  "attributes":{
-    "issuerDid":"did:ebsi:abcd",
-    "preAuthorizedCodeLifespanS":3600
-    }
-  }'
-
-#Add issuer DID
-response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master \
-    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$REALM_CONFIGURATION" )
 
 
 # Enable ecdsa  
@@ -45,6 +32,21 @@ response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/comp
     -H "Content-Type: application/json" \
     -d "$COMPONENT")
 
+#Add issuer DID
+ebsidid=$(python3 0.did-key.py)
+
+REALM_CONFIGURATION='{
+  "attributes":{
+    "issuerDid":"'"${ebsidid}"'",
+    "preAuthorizedCodeLifespanS":3600
+    }
+  }'
+
+response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master \
+    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$REALM_CONFIGURATION" )
+
 #Add signing components
 ## Get key Id
 response=$(curl -k -s  -X GET $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys \
@@ -52,6 +54,16 @@ response=$(curl -k -s  -X GET $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys \
 
 
 KEY_ID=$(echo $response|jq -r '.active.ES256')
+
+#change the key id 
+#KEY_CONFIGURATION='{
+#    "kid":"'"${ebsidid}"'"
+#  }'
+#response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys/$KEY_ID \
+#    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
+#    -H "Content-Type: application/json" \
+#    -d "$KEY_CONFIGURATION" )
+
 
 COMPONENT='{
     "id": "jwt_signing_component_trace4eu",
@@ -123,8 +135,8 @@ response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/clie
 #Add user
 USER_CONFIG='{
   "username": "trace4eu",
-  "firstName":"Nikos",
-  "lastName":"Fotiou",
+  "firstName":"First name",
+  "lastName":"Last name",
   "email":"info@trace4eu.eu",
   "credentials":[{
 		"type": "password",

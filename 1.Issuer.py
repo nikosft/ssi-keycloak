@@ -104,9 +104,7 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
             credential_offer_html = f"""
                 <html><head><title>OAuth client</title></head>
                 <body>
-                <p>Copy the pre-authorized_code from the following credential offer to the 2.Wallet.sh script.</p>
-                <code>{json.dumps(ebsi_credential_offer)}
-                <p>Or scan the following qrcode.</p>
+                <p>Scan the following qrcode.</p>
                 <img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />
                 <p>QRCode data:</p>
                 <p>{credential_offer_string}</p>

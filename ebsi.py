@@ -2,6 +2,8 @@ import json
 import base58
 import jcs
 import uuid
+import time
+from  datetime import datetime
 from jwcrypto import jwk, jwt, jws
 from mitmproxy import http
 
@@ -33,40 +35,38 @@ metadata = {
 }
 
 key = jwk.JWK.generate(kty='EC', crv='P-256')
-key_json = json.loads(key.export())
+key_json = json.loads(key.export_public())
 b58 = base58.b58encode( b'\xd1\xd6\x03'+jcs.canonicalize(key_json))
 did_ebsi="did:key:z" + b58.decode()
+
 
 credential_header = {
   "alg": "ES256",
   "typ": "JWT",
-  "kid": did_ebsi
+  "kid": did_ebsi + "#z" + b58.decode()
 }
 
 credential_payload ={
-  "jti": "urn:did:123456",
+  "jti": "",
   "sub": "",
   "iss": did_ebsi,
-  "nbf": 1635724800,
-  "exp": 1953763200,
-  "iat": 1635724800,
+  "nbf": 0,
+  "exp": 0,
+  "iat": 0,
   "vc": {
     "@context": [
       "https://www.w3.org/2018/credentials/v1"
     ],
-    "id": "urn:did:123456",
+    "id": "",
     "type": [
       "VerifiableCredential", "trace4eu"
     ],
     "issuer": did_ebsi,
-    "issuanceDate": "2021-11-01T00:00:00Z",
-    "validFrom": "2021-11-01T00:00:00Z",
-    "issued": "2021-11-01T00:00:00Z",
+    "issuanceDate": "",
+    "validFrom": "",
+    "issued": "",
     "credentialSubject": {
-      "id": "",
-      "familyName": "Castafiori",
-      "firstName": "Bianca",
-      "dateOfBirth": "1930-10-01"
+
     },
     "credentialSchema": {
       "id": "https://api-pilot.ebsi.eu/trusted-schemas-registry/v2/schemas/z3MgUFUkb722uq4x3dv5yAJmnNmzDFeK5UC8x83QoeLJM",
@@ -106,8 +106,20 @@ def response(flow: http.HTTPFlow) -> None:
       keycloak_cred = resp_data['credential']
       _jws = jws.JWS()
       _jws.deserialize(keycloak_cred)
+      current_time = time.time()
+      exp_time = current_time + 31536000
+      credential_id = "urn:did:" + str(uuid.uuid4())
       claims = json.loads(_jws.objects.get("payload"))
       credential_payload['vc']['credentialSubject'] = claims['vc']['credentialSubject']
+      credential_payload['iat'] = int(current_time)
+      credential_payload['nbf'] = int(current_time)
+      credential_payload['exp'] = int(exp_time)
+      credential_payload['jti'] = credential_id
+      credential_payload['vc']['issuanceDate'] = datetime.utcfromtimestamp(current_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+      credential_payload['vc']['issued'] = datetime.utcfromtimestamp(current_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+      credential_payload['vc']['validFrom'] = datetime.utcfromtimestamp(current_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+      credential_payload['vc']['expirationDate'] = datetime.utcfromtimestamp(exp_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+      credential_payload['vc']['id'] = credential_id
       _jws.deserialize(proof_jwt)
       claims=json.loads(_jws.objects.get("payload"))
       client_did = claims['iss']

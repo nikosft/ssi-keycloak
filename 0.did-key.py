@@ -45,7 +45,7 @@ for key in keys_json['keys']:
 
 key = jwk.JWK.from_pem(public_key.encode())
 
-key_json = json.loads(key.export())
+key_json = json.loads(key.export_public())
 key_json.pop('kid')
 
 b58 = base58.b58encode( b'\xd1\xd6\x03'+jcs.canonicalize(key_json))

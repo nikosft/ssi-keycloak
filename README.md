@@ -12,8 +12,11 @@ For the issuer the following python libraries are required
 * base58 (`python -m pip install base58`)
 * jcs (`python -m pip install jcs`)
 
-For the proxy that provides backward compatibility which OID4VCI used by ebsy (mitmproxy)(https://mitmproxy.org/)
-is required, which must be installed using a Python Package manager (https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)
+Your keycloak instance needs also to be Internet accessible.
+
+# Preparation
+
+Modify the varaible `KEYCLOAK_EXTERNAL_ADDR` in `0,configure.sh`, `0.did-key.py`, `1.Issuer.py`, and `ebsi.py`
 
 # Using
 Step 1: Keycloak execution. Run the following command. Make sure you are using a safe password
@@ -35,9 +38,11 @@ with user name `trace4eu` and password `trace4eu`.
 Step 3: Execute the issuer script `python3 ./Issuer.py` This script emulates the web application of an issuer. It opens a browser. There you have to login 
 using the demo user credentials and give consent. Then you are re-directed to a web page that includes the credential offer (also ouput to the console).
 
-Step 4: Copy the `pre-authorized_code` in the `2.Wallet.sh` script and exeute it to receive the credential. 
+Step 4: Scan the generated qr-code with your wallet. 
 
 ## EBSI compliance
+For the proxy that provides backward compatibility which OID4VCI used by ebsy (mitmproxy)(https://mitmproxy.org/)
+is required, which must be installed using a Python Package manager (https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)
 
 ```bash
 mitmproxy -s ./ebsi.py --mode reverse:http://localhost:8080@7000

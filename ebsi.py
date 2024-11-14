@@ -21,7 +21,7 @@ metadata = {
       "format": "jwt_vc",
       "types": [
         "VerifiableCredential",
-        "trace4eu"
+        "VerifiableAttestation"
       ],
       
       "display": [
@@ -33,38 +33,45 @@ metadata = {
     }
   ]
 }
-
+'''
 key = jwk.JWK.generate(kty='EC', crv='P-256')
 key_json = json.loads(key.export_public())
 b58 = base58.b58encode( b'\xd1\xd6\x03'+jcs.canonicalize(key_json))
 did_ebsi="did:key:z" + b58.decode()
+'''
+# Add testing enviroment did:ebsi
+key_json = json.dumps({'kty': 'EC', 'crv': 'P-256', 'x': 'jJXC89Sj0RRriF-5nVntJufmAQMTRHa9HwLBYef8WFY', 'y': 'TV1Q6vHPMWgYr0O82EJMZXwPjOxA9qgagvNoPGgdI3U', 'd': 'hpF2v5K2MGG1mibv9jcNJhJXIIRJh6YFN97jv_CHQPs', 'kid': 'yzVc8uD5KS3GCtzNuVFL2A8Qzk29dHh4M-FDYtQ8tRg'}
+)
 
+key = jwk.JWK.from_json(key_json)
+did_ebsi = "did:ebsi:zfEmvX5twhXjQJiCWsukvQA"
+b58 = base58.b58encode( b'\xd1\xd6\x03'+jcs.canonicalize(key_json))
 
 credential_header = {
-  "alg": "ES256",
   "typ": "JWT",
-  "kid": did_ebsi + "#z" + b58.decode()
+  "alg": "ES256",
+  "kid": "did:ebsi:zfEmvX5twhXjQJiCWsukvQA#yzVc8uD5KS3GCtzNuVFL2A8Qzk29dHh4M-FDYtQ8tRg" 
 }
 
 credential_payload ={
+  "iat": 0,
+  "exp": 0,
   "jti": "",
   "sub": "",
   "iss": did_ebsi,
   "nbf": 0,
-  "exp": 0,
-  "iat": 0,
   "vc": {
     "@context": [
       "https://www.w3.org/2018/credentials/v1"
     ],
     "id": "",
     "type": [
-      "VerifiableCredential", "trace4eu"
+      "VerifiableCredential", "VerifiableAttestation"
     ],
     "issuer": did_ebsi,
     "issuanceDate": "",
-    "validFrom": "",
     "issued": "",
+    "validFrom": "",
     "credentialSubject": {
 
     },
@@ -86,10 +93,10 @@ def request(flow: http.HTTPFlow) -> None:
             json.dumps(metadata),  # (optional) content
             {"Content-Type": "application/json"},  # (optional) headers
         )
-    if flow.request.pretty_url.endswith("/realms/master/protocol/oid4vc/credential"):
+    if flow.request.pretty_url.endswith("/realms/master/protocol/oid4vc/credential"): 
         data = json.loads(flow.request.get_text())
         data.pop('types', None)#Old OIDC version, replace it with credential_identifier
-        data['credential_identifier']="trace4eu"
+        data['credential_identifier']="VerifiableAttestation"
         #print(data['proof'])
         #data.pop('proof', None)
         flow.request.text = json.dumps(data)

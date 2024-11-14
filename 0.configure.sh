@@ -75,7 +75,7 @@ COMPONENT='{
       "algorithmType": ["ES256"],
       "hashAlgorithm": ["sha-256"],
       "tokenType": ["JWT"],
-      "vcConfigId": ["trace4eu"]
+      "vcConfigId": ["VerifiableAttestation"]
     }
   }'
 
@@ -96,10 +96,10 @@ OID4VCI_CLIENT_CONFIG='{
   "enabled": true,
   "publicClient": true,
   "attributes": {
-    "vc.trace4eu.expiry_in_s": 100,
-    "vc.trace4eu.format": "jwt_vc",
-    "vc.trace4eu.scope": "trace4eu",
-    "vc.trace4eu.credential_signing_alg_values_supported": "ES256"
+    "vc.VerifiableAttestation.expiry_in_s": 100,
+    "vc.VerifiableAttestation.format": "jwt_vc",
+    "vc.VerifiableAttestation.scope": "trace4eu",
+    "vc.VerifiableAttestation.credential_signing_alg_values_supported": "ES256"
    },
   "protocolMappers": [
     {
@@ -110,7 +110,7 @@ OID4VCI_CLIENT_CONFIG='{
       "config": {
         "subjectProperty": "firstName",
         "userAttribute": "firstName",
-        "supportedCredentialTypes": "trace4eu"
+        "supportedCredentialTypes": "VerifiableAttestation"
       }
     },
     {
@@ -121,7 +121,7 @@ OID4VCI_CLIENT_CONFIG='{
       "config": {
         "subjectProperty": "lastName",
         "userAttribute": "lastName",
-        "supportedCredentialTypes": "trace4eu"
+        "supportedCredentialTypes": "VerifiableAttestation"
       }
     }
   ]

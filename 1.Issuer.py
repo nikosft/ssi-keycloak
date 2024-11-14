@@ -29,7 +29,7 @@ ebsi_credential_offer = {
     "credential_issuer":KEYCLOAK_EXTERNAL_ADDR,
     "credentials":[{
         "format": "jwt_vc",
-        "types": ["VerifiableCredential", "trace4eu"]
+        "types": ["VerifiableCredential", "VerifiableAttestation"]
     }]
 }
 
@@ -73,7 +73,7 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
                 'Authorization': 'Bearer ' + access_token,
             }
 
-            response = requests.get(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=trace4eu", headers=headers)
+            response = requests.get(KEYCLOAK_EXTERNAL_ADDR + "/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=VerifiableAttestation", headers=headers)
             print(response.text)
             configuration_json =  json.loads(response.text)
             if not 'issuer' in configuration_json:
@@ -102,7 +102,7 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             credential_offer_html = f"""
-                <html><head><title>OAuth client</title></head>
+                <html><head><title>Credential Issuer</title></head>
                 <body>
                 <p>Scan the following qrcode.</p>
                 <img src="data:image/png;base64,{qr_code_image_base64}" alt="QR Code" />
@@ -112,13 +112,29 @@ class AccessCodeHandler(BaseHTTPRequestHandler):
                 </body></html>
             """
             self.wfile.write(bytes(credential_offer_html, "utf-8"))
+    
+    def _index(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        credential_offer_html = f"""
+            <html><head><title>Credential issuer</title></head>
+            <body>
+            <p><a href="{_authorization_url}">Receive your credential</a></p>
+            </body></html>
+        """
+        self.wfile.write(bytes(credential_offer_html, "utf-8"))
+
     def do_GET(self):
         print(self.path)
-        self._credential_offer()
+        if(self.path == "/issue"):
+            self._index()
+        else:
+            self._credential_offer()
         
 
 print("...Opening browser")
-webbrowser.open(_authorization_url)
+webbrowser.open("http://localhost:8000/issue")
 print("...Running server to receive access code")
 httpd = HTTPServer(('127.0.0.1', 8000), AccessCodeHandler)
 httpd.serve_forever()

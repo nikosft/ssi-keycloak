@@ -2,6 +2,8 @@
 KEYCLOAK_EXTERNAL_ADDR="https://keycloack.excid.io"
 KEYCLOAK_ADMIN_USERNAME="admin"
 KEYCLOAK_ADMIN_PASSWORD="admin"
+ISSUER_DID="did:ebsi:zfEmvX5twhXjQJiCWsukvQA"
+SIGNING_KEY_ID="did:ebsi:zfEmvX5twhXjQJiCWsukvQA#yzVc8uD5KS3GCtzNuVFL2A8Qzk29dHh4M-FDYtQ8tRg"
 
 
 
@@ -13,31 +15,9 @@ response=$(curl -k -s  -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/op
 
 ADMIN_ACCESS_TOKEN=$(echo $response|jq -r '.access_token')
 
-
-# Enable ecdsa  
-COMPONENT='{
-    "config": {
-        "active": ["true"],
-        "ecdsaEllipticCurveKey": ["P-256"],
-        "enabled": ["true"],
-        "priority": ["0"]
-    },
-    "name": "ecdsa-generated",
-    "providerId": "ecdsa-generated",
-    "providerType": "org.keycloak.keys.KeyProvider"
-}'
-
-response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/components \
-    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$COMPONENT")
-
-#Add issuer DID
-ebsidid=$(python3 0.did-key.py)
-
 REALM_CONFIGURATION='{
   "attributes":{
-    "issuerDid":"'"${ebsidid}"'",
+    "issuerDid":"'"${ISSUER_DID}"'",
     "preAuthorizedCodeLifespanS":3600
     }
   }'
@@ -47,31 +27,39 @@ response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master \
     -H "Content-Type: application/json" \
     -d "$REALM_CONFIGURATION" )
 
-#Add signing components
-## Get key Id
-response=$(curl -k -s  -X GET $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys \
-    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" )
+# Enable ecdsa  
+# COMPONENT='{
+#    "config": {
+#        "active": ["true"],
+#        "ecdsaEllipticCurveKey": ["P-256"],
+#        "enabled": ["true"],
+#        "priority": ["0"]
+#    },
+#    "name": "ecdsa-generated",
+#    "providerId": "ecdsa-generated",
+#    "providerType": "org.keycloak.keys.KeyProvider"
+#}'
 
-
-KEY_ID=$(echo $response|jq -r '.active.ES256')
-
-#change the key id 
-#KEY_CONFIGURATION='{
-#    "kid":"'"${ebsidid}"'"
-#  }'
-#response=$(curl -k -s  -X PUT $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys/$KEY_ID \
+#response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/components \
 #    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
 #    -H "Content-Type: application/json" \
-#    -d "$KEY_CONFIGURATION" )
+#    -d "$COMPONENT")#
+#
 
 
+
+#Add signing components
+## Get key Id
+#response=$(curl -k -s  -X GET $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/keys \
+#    -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" )
+#KEY_ID=$(echo $response|jq -r '.active.ES256')
 COMPONENT='{
     "id": "jwt_signing_component_trace4eu",
     "name": "jwt_signing_component_trace4eu",
     "providerId": "jwt_vc",
     "providerType": "org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService",
     "config": {
-      "keyId": ["'"${KEY_ID}"'"],
+      "keyId": ["'"${SIGNING_KEY_ID}"'"],
       "algorithmType": ["ES256"],
       "hashAlgorithm": ["sha-256"],
       "tokenType": ["JWT"],
@@ -84,7 +72,6 @@ response=$(curl -k -s  -X  POST $KEYCLOAK_EXTERNAL_ADDR/admin/realms/master/comp
     -H "Authorization: Bearer $ADMIN_ACCESS_TOKEN" \
     -H "Content-Type: application/json" \
     -d "$COMPONENT")
-
 
 
 #Register client used for VC configuration
